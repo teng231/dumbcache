@@ -87,3 +87,23 @@ func TestCacheCount(t *testing.T) {
 	}
 	log.Print(c)
 }
+
+func TestCacheListWithRedisDie(t *testing.T) {
+	d := &DumbCache{}
+	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	if err != nil {
+		log.Print(1, err)
+	}
+	d.client.Close()
+	data := []*Partner{}
+	err = d.List(&PartnerRequest{Id: 10, Limit: 2}, &data, func() (interface{}, error) {
+		return []*Partner{
+			{Id: 1, Name: "te1"},
+			{Id: 4, Name: "te4"},
+		}, nil
+	})
+	if err != nil {
+		log.Print(2, err)
+	}
+	log.Print(data)
+}

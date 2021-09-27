@@ -107,7 +107,16 @@ func (d *DumbCache) List(input, out interface{}, handler func() (interface{}, er
 		isParsing = true
 	}
 	if err != nil && !isParsing {
-		return err
+		log.Print(err)
+		payload, err := handler()
+		if err != nil {
+			return err
+		}
+		bin, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		data = string(bin)
 	}
 	if err := json.Unmarshal([]byte(data), out); err != nil {
 		return err
@@ -141,7 +150,16 @@ func (d *DumbCache) Count(input interface{}, out *int64, handler func() (int64, 
 		isParsing = true
 	}
 	if err != nil && !isParsing {
-		return err
+		log.Print(err)
+		payload, err := handler()
+		if err != nil {
+			return err
+		}
+		bin, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		data = string(bin)
 	}
 	if err := json.Unmarshal([]byte(data), out); err != nil {
 		return err
