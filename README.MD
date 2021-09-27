@@ -1,4 +1,7 @@
 # Dumbcache
+[![GitHub Actions](https://github.com/princjef/gomarkdoc/workflows/Test/badge.svg)](https://github.com/teng231/dumbcache/actions?query=workflow)
+[![Go Reference](https://pkg.go.dev/badge/github.com/princjef/gomarkdoc.svg)](https://pkg.go.dev/github.com/teng231/dumbcache)
+
 Cache list, count with filter param golang, using struct, hashkey
 
 ### Structure
