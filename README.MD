@@ -56,7 +56,7 @@ func CountData(t *testing.T) {
 
 * Expire
 ``` go
-func Expire(t *testing.T) {
+func Expire() {
 	d := &DumbCache{}
 	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
 	if err != nil {
