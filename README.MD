@@ -53,3 +53,20 @@ func CountData(t *testing.T) {
 	log.Print(c)
 }
 ```
+
+* Expire
+``` go
+func Expire(t *testing.T) {
+	d := &DumbCache{}
+	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	if err != nil {
+		log.Print(1, err)
+	}
+	var c int64 = 0
+	err = d.Expire(&PartnerRequest{Id: 10, Limit: 3})
+	if err != nil {
+		log.Print(err)
+	}
+	log.Print(c)
+}
+```

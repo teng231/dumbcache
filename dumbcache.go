@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -26,6 +27,11 @@ func (d *DumbCache) Connect(addr, pw string, db int, timeout, duration time.Dura
 		DialTimeout:     10 * time.Second,
 		DB:              db, // use default DB
 	})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := client.Ping(ctx).Err(); err != nil {
+		log.Print(err)
+	}
 	d.client = client
 	d.timeout = timeout
 	d.duration = duration
@@ -124,7 +130,7 @@ func (d *DumbCache) Count(input interface{}, out *int64, handler func() (int64, 
 		if err != nil {
 			return err
 		}
-		if err := d.Set(CLIST, input, payload); err != nil {
+		if err := d.Set(CCOUNT, input, payload); err != nil {
 			return err
 		}
 		bin, err := json.Marshal(payload)
