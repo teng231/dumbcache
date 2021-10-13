@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
+
 type PartnerRequest struct {
 	Id    int64   `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 	Name  string  `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
@@ -32,7 +36,11 @@ type Partner struct {
 
 func TestCacheGetSet(t *testing.T) {
 	d := &DumbCache{}
-	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	err := d.Connect(&Config{
+		Addr:     "localhost:6379",
+		Timeout:  5 * time.Second,
+		Duration: 5 * time.Minute,
+	})
 	if err != nil {
 		log.Print(1, err)
 	}
@@ -47,7 +55,7 @@ func TestCacheGetSet(t *testing.T) {
 		log.Print(2, err)
 	}
 	if err := d.ParseData(req, &data); err != nil {
-		log.Print(err)
+		log.Print(err, req)
 	}
 	bin, _ := json.Marshal(data)
 	log.Print(string(bin))
@@ -55,7 +63,11 @@ func TestCacheGetSet(t *testing.T) {
 
 func TestCacheList(t *testing.T) {
 	d := &DumbCache{}
-	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	err := d.Connect(&Config{
+		Addr:     "localhost:6379",
+		Timeout:  5 * time.Second,
+		Duration: 5 * time.Minute,
+	})
 	if err != nil {
 		log.Print(1, err)
 	}
@@ -74,7 +86,11 @@ func TestCacheList(t *testing.T) {
 
 func TestCacheCount(t *testing.T) {
 	d := &DumbCache{}
-	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	err := d.Connect(&Config{
+		Addr:     "localhost:6379",
+		Timeout:  5 * time.Second,
+		Duration: 5 * time.Minute,
+	})
 	if err != nil {
 		log.Print(1, err)
 	}
@@ -90,7 +106,11 @@ func TestCacheCount(t *testing.T) {
 
 func TestCacheListWithRedisDie(t *testing.T) {
 	d := &DumbCache{}
-	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	err := d.Connect(&Config{
+		Addr:     "localhost:6379",
+		Timeout:  5 * time.Second,
+		Duration: 5 * time.Minute,
+	})
 	if err != nil {
 		log.Print(1, err)
 	}
@@ -105,5 +125,51 @@ func TestCacheListWithRedisDie(t *testing.T) {
 	if err != nil {
 		log.Print(2, err)
 	}
+	log.Print(data)
+}
+
+func TestCacheListWithLocalCache(t *testing.T) {
+	d := &DumbCache{}
+	err := d.Connect(&Config{
+		Addr:          "localhost:6379",
+		Timeout:       5 * time.Second,
+		Duration:      5 * time.Minute,
+		LocalDuration: 1 * time.Second,
+		MaxSizeLocal:  200,
+	})
+	if err != nil {
+		log.Print(1, err)
+	}
+	data := []*Partner{}
+	err = d.List(&PartnerRequest{Id: 10, Limit: 2}, &data, func() (interface{}, error) {
+		return []*Partner{
+			{Id: 1, Name: "te1"},
+			{Id: 4, Name: "te4"},
+		}, nil
+	})
+	if err != nil {
+		log.Print(2, err)
+	}
+	log.Print(data)
+	time.Sleep(100 * time.Millisecond)
+
+	/// next step
+	d.List(&PartnerRequest{Id: 10, Limit: 2}, &data, func() (interface{}, error) {
+		return []*Partner{
+			{Id: 1, Name: "te1"},
+			{Id: 4, Name: "te4"},
+		}, nil
+	})
+	log.Print(data)
+	time.Sleep(2 * time.Second)
+
+	/// next step
+	d.List(&PartnerRequest{Id: 10, Limit: 2}, &data, func() (interface{}, error) {
+		return []*Partner{
+			{Id: 1, Name: "te1"},
+			{Id: 4, Name: "te4"},
+		}, nil
+	})
+
 	log.Print(data)
 }
