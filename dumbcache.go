@@ -12,23 +12,6 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type DumbCache struct {
-	client   *redis.Client
-	timeout  time.Duration
-	duration time.Duration
-	module   *LocalModule
-}
-
-type Config struct {
-	Addr          string
-	Password      string
-	Db            int
-	Timeout       time.Duration
-	Duration      time.Duration
-	MaxSizeLocal  int
-	LocalDuration time.Duration
-}
-
 func (d *DumbCache) Connect(config *Config) error {
 	if config.Addr == "" {
 		return errors.New("not found addr redis")
