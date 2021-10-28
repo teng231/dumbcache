@@ -59,7 +59,6 @@ func (d *DumbCache) Set(prefix string, input, payload interface{}) error {
 		return err
 	}
 	if d.module != nil {
-		log.Print("set ", prefix+hash, payload)
 		err := d.module.Set(prefix+hash, payload)
 		if err != nil {
 			log.Print(err)

@@ -48,7 +48,6 @@ func (l *LocalModule) Set(key interface{}, value interface{}) error {
 
 func (l *LocalModule) Get(key interface{}) (string, error) {
 	value, has := l.s.Get(key)
-	log.Print(l.duration)
 	if !has {
 		return "", errors.New("not found")
 	}
