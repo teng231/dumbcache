@@ -56,6 +56,25 @@ func CountData(t *testing.T) {
 	log.Print(c)
 }
 ```
+* CalcInt
+``` go
+func CalcData(t *testing.T) {
+	d := &DumbCache{}
+	err := d.Connect("localhost:6379", "", 0, 5*time.Second, 5*time.Minute)
+	if err != nil {
+		log.Print(1, err)
+	}
+	var c int64 = 0
+	err = d.CalcInt(&PartnerRequest{Id: 10, Limit: 3}, &c, func() (int64, error) {
+		count, err := db.SumPartners(req)
+		return count, err
+	})
+	if err != nil {
+		log.Print(err)
+	}
+	log.Print(c)
+}
+```
 
 * Expire
 ``` go

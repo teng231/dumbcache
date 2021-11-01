@@ -19,6 +19,7 @@ type IDumbCache interface {
 	Expire(input interface{}) error
 	List(input, out interface{}, handler func() (interface{}, error)) error
 	Count(input interface{}, out *int64, handler func() (int64, error)) error
+	CalcInt(input interface{}, out *int64, handler func() (int64, error)) error
 }
 
 type DumbCache struct {
@@ -39,6 +40,7 @@ type Config struct {
 }
 
 const (
-	CLIST  = "c_list_"
-	CCOUNT = "c_count_"
+	CLIST    = "c_list_"
+	CCOUNT   = "c_count_"
+	CCACLINT = "c_calc_int_"
 )

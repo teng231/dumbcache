@@ -228,3 +228,56 @@ func (d *DumbCache) Expire(input interface{}) error {
 	defer cancel()
 	return d.client.Del(ctx, CCOUNT+hash, CLIST+hash).Err()
 }
+
+// CalcInt cache count
+func (d *DumbCache) CalcInt(input interface{}, out *int64, handler func() (int64, error)) error {
+	hash, err := d.MakeHash(input)
+	if err != nil {
+		return err
+	}
+	if d.module != nil {
+		data, err := d.module.Get(CCACLINT + hash)
+		if err == nil {
+			if err := json.Unmarshal([]byte(data), out); err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	isParsing := false
+	ctx, cancel := context.WithTimeout(context.Background(), d.timeout)
+	defer cancel()
+	data, err := d.client.Get(ctx, CCACLINT+hash).Result()
+	if err != nil && err.Error() == redis.Nil.Error() {
+		payload, err := handler()
+		if err != nil {
+			return err
+		}
+		if err := d.Set(CCACLINT, input, payload); err != nil {
+			return err
+		}
+		bin, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		data = string(bin)
+		isParsing = true
+	}
+	if err != nil && !isParsing {
+		log.Print(err)
+		payload, err := handler()
+		if err != nil {
+			return err
+		}
+		bin, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		data = string(bin)
+	}
+	log.Print("get from redis")
+	if err := json.Unmarshal([]byte(data), out); err != nil {
+		return err
+	}
+	return nil
+}
