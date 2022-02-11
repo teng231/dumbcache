@@ -1,3 +1,7 @@
+# v1.1.2
+Fix Duplicate key with md5 hash
+see at test `TestCacheItemWithFreeKey`
+
 # v1.1.1
 ### Breaking change
 ```go
