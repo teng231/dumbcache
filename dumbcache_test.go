@@ -3,6 +3,7 @@ package dumbcache
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"testing"
 	"time"
 )
@@ -20,6 +21,18 @@ type PartnerRequest struct {
 	From  int64   `protobuf:"varint,8,opt,name=from,proto3" json:"from,omitempty"`
 	To    int64   `protobuf:"varint,9,opt,name=to,proto3" json:"to,omitempty"`
 	Ids   []int64 `protobuf:"varint,11,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+}
+
+type ARequest struct {
+	Id    int64  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Name  string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Limit int32  `protobuf:"varint,7,opt,name=limit,proto3" json:"limit,omitempty"`
+}
+
+type A struct {
+	Id   string `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	X    int32  `protobuf:"varint,7,opt,name=limit,proto3" json:"x,omitempty"`
 }
 
 type Partner struct {
@@ -172,4 +185,49 @@ func TestCacheListWithLocalCache(t *testing.T) {
 	})
 
 	log.Print(data)
+}
+
+func TestCacheItemWithFreeKey(t *testing.T) {
+	d := &DumbCache{}
+	err := d.Connect(&Config{
+		Addr:          "localhost:6379",
+		Timeout:       5 * time.Second,
+		Duration:      5 * time.Minute,
+		LocalDuration: 1 * time.Second,
+		MaxSizeLocal:  200,
+	})
+	if err != nil {
+		log.Print(1, err)
+	}
+
+	cases := map[interface{}]interface{}{
+		&PartnerRequest{Id: 10, Limit: 2}: []*Partner{
+			{Id: 1, Name: "te1"},
+		},
+		&ARequest{Id: 10, Limit: 2}: []*A{
+			{Id: "ss", Name: "2"},
+		},
+	}
+	for req, item := range cases {
+		var data interface{}
+		err = d.List(req, &data, func() (interface{}, error) {
+			return item, nil
+		})
+		if err != nil {
+			log.Print(2, err)
+		}
+		log.Print(data)
+	}
+}
+
+func TestRun(t *testing.T) {
+	x := "11.222"
+	y := "333"
+	log.Print(strings.Split(x, "."))
+	log.Print(strings.Split(y, "."))
+	xx := strings.Split(x, ".")
+	yy := strings.Split(y, ".")
+	log.Print(xx[len(xx)-1])
+	log.Print(yy[len(yy)-1])
+
 }

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -71,11 +73,14 @@ func (d *DumbCache) Set(prefix string, input, payload interface{}) error {
 }
 
 func (d *DumbCache) MakeHash(in interface{}) (string, error) {
+	typeName := reflect.TypeOf(in).String()
+	typeNameItems := strings.Split(typeName, ".")
+	name := typeNameItems[len(typeNameItems)-1]
 	payload, err := json.Marshal(in)
 	if err != nil {
 		return "", err
 	}
-	hash := fmt.Sprintf("%x", md5.Sum(payload))
+	hash := fmt.Sprintf("%s.%x", name, md5.Sum(payload))
 	return hash, nil
 }
 
