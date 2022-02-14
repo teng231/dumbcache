@@ -1,3 +1,6 @@
+# v1.1.5
+Upgrade vendor, update go builder
+
 # v1.1.4
 Fix Duplicate key with md5 hash
 see at test `TestCacheItemWithFreeKey`
