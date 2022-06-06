@@ -21,7 +21,7 @@ type IDumbCache interface {
 
 	Expire(input interface{}) error
 	List(input, out interface{}, handler func() (interface{}, error)) error
-	ListWithProto(input, out interface{}, handler func() (proto.Message, error)) error
+	ListWithProto(input interface{}, out proto.Message, handler func() (proto.Message, error)) error
 
 	Count(input interface{}, out *int64, handler func() (int64, error)) error
 	CalcInt(input interface{}, out *int64, handler func() (int64, error)) error
