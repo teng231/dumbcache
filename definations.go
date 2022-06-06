@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"google.golang.org/protobuf/proto"
 )
 
 type IDumbCache interface {
@@ -12,12 +13,16 @@ type IDumbCache interface {
 
 	// Set raw to get raw
 	Set(prefix string, input, payload interface{}) error
+	SetWithProto(prefix string, input interface{}, payload proto.Message) error
 	// Make hash key
 	MakeHash(in interface{}) (string, error)
 	ParseData(input, out interface{}) error
+	ParseDataWithProto(input interface{}, payload proto.Message) error
 
 	Expire(input interface{}) error
 	List(input, out interface{}, handler func() (interface{}, error)) error
+	ListWithProto(input, out interface{}, handler func() (proto.Message, error)) error
+
 	Count(input interface{}, out *int64, handler func() (int64, error)) error
 	CalcInt(input interface{}, out *int64, handler func() (int64, error)) error
 }

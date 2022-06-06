@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"google.golang.org/protobuf/proto"
 )
 
 func (d *DumbCache) Connect(config *Config) error {
@@ -49,6 +50,27 @@ func (d *DumbCache) Connect(config *Config) error {
 	d.duration = config.Duration
 	d.module = CreateLocalModule(config.MaxSizeLocal, config.LocalDuration)
 	return nil
+}
+
+func (d *DumbCache) SetWithProto(prefix string, input interface{}, payload proto.Message) error {
+	hash, err := d.MakeHash(input)
+	if err != nil {
+		return err
+	}
+	pBytes, err := proto.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	if d.module != nil {
+		err := d.module.Set(prefix+hash, payload)
+		if err != nil {
+			log.Print(err)
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), d.timeout)
+	defer cancel()
+
+	return d.client.Set(ctx, prefix+hash, string(pBytes), d.duration).Err()
 }
 
 func (d *DumbCache) Set(prefix string, input, payload interface{}) error {
@@ -114,6 +136,36 @@ func (d *DumbCache) ParseData(input, out interface{}) error {
 	return nil
 }
 
+// ParseData out is a pointer
+func (d *DumbCache) ParseDataWithProto(input interface{}, out proto.Message) error {
+	hash, err := d.MakeHash(input)
+	if err != nil {
+		return err
+	}
+
+	if d.module != nil {
+		data, err := d.module.Get(hash)
+		if err == nil {
+			if err := proto.Unmarshal([]byte(data), out); err != nil {
+				return err
+			}
+			return nil
+		}
+
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), d.timeout)
+	defer cancel()
+	data, err := d.client.Get(ctx, hash).Result()
+	if err != nil {
+		return err
+	}
+	if err := proto.Unmarshal([]byte(data), out); err != nil {
+		return err
+	}
+	return nil
+}
+
 // List list cache data
 // out is a pointer
 func (d *DumbCache) List(input, out interface{}, handler func() (interface{}, error)) error {
@@ -163,6 +215,60 @@ func (d *DumbCache) List(input, out interface{}, handler func() (interface{}, er
 		data = string(bin)
 	}
 	if err := json.Unmarshal([]byte(data), out); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ListWithProto list cache data
+// out is a pointer
+func (d *DumbCache) ListWithProto(input interface{}, out proto.Message, handler func() (proto.Message, error)) error {
+	hash, err := d.MakeHash(input)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), d.timeout)
+	defer cancel()
+	isParsing := false
+
+	if d.module != nil {
+		data, err := d.module.Get(CLIST + hash)
+		if err == nil {
+			if err := proto.Unmarshal([]byte(data), out); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	data, err := d.client.Get(ctx, CLIST+hash).Result()
+	if err != nil && err.Error() == redis.Nil.Error() {
+		payload, err := handler()
+		if err != nil {
+			return err
+		}
+		if err := d.Set(CLIST, input, payload); err != nil {
+			return err
+		}
+		bin, err := proto.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		data = string(bin)
+		isParsing = true
+	}
+	if err != nil && !isParsing {
+		payload, err := handler()
+		if err != nil {
+			return err
+		}
+		bin, err := proto.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		data = string(bin)
+	}
+	if err := proto.Unmarshal([]byte(data), out); err != nil {
 		return err
 	}
 	return nil

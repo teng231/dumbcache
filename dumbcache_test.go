@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 func init() {
@@ -45,6 +47,10 @@ type Partner struct {
 	Phone   string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
 	// `xorm:"text"`
 	Slogan string `protobuf:"bytes,6,opt,name=slogan,proto3" json:"slogan,omitempty" xorm:"text"`
+}
+
+type Partners struct {
+	Partners []*Partner `protobuf:"varint,1,opt,name=partner,proto3" json:"partner,omitempty"`
 }
 
 func TestCacheGetSet(t *testing.T) {
@@ -90,6 +96,29 @@ func TestCacheList(t *testing.T) {
 			{Id: 1, Name: "te1"},
 			{Id: 4, Name: "te4"},
 		}, nil
+	})
+	if err != nil {
+		log.Print(2, err)
+	}
+	log.Print(data)
+}
+
+func TestCacheListWithProto(t *testing.T) {
+	d := &DumbCache{}
+	err := d.Connect(&Config{
+		Addr:     "localhost:6379",
+		Timeout:  5 * time.Second,
+		Duration: 5 * time.Minute,
+	})
+	if err != nil {
+		log.Print(1, err)
+	}
+	data := &Partners{}
+	err = d.ListWithProto(&PartnerRequest{Id: 10, Limit: 2}, data, func() (proto.Message, error) {
+		return &Partners{Partners: []*Partner{
+			{Id: 1, Name: "te1"},
+			{Id: 4, Name: "te4"},
+		}}, nil
 	})
 	if err != nil {
 		log.Print(2, err)
